@@ -33,6 +33,9 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 
 	text := ""
 	now := time.Now()
+	nowUTC := now.UTC()
+	jst := time.FixedZone("Asia/Tokyo",  9 * 60 * 60)
+	nowJST := nowUTC.In(jst)
 	attendance := -1
 	switch data.Actions[0].Name {
 	case actionTypeLeave:
@@ -42,13 +45,13 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 		}
 	case actionTypeRest:
 		{
-			timeTable.Rest(now)
-			text = "休憩を開始しました :coffee:"
+			timeTable.Rest(nowJST)
+			text = "中抜けします :coffee:"
 		}
 	case actionTypeUnrest:
 		{
-			timeTable.Unrest(now)
-			text = "休憩を終了しました :computer:"
+			timeTable.Unrest(nowJST)
+			text = "中抜けから戻りました :computer:"
 		}
 	case actionTypeAttend:
 		{
@@ -186,37 +189,12 @@ func (ctx *Context) getSlackMessage(command slack.SlashCommand) (*slack.Msg, err
 			Text: "本日は休日です :sunny:",
 		}, nil
 	}
-	if timeTable.IsResting() {
-		return &slack.Msg{
-			Attachments: []slack.Attachment{
-				slack.Attachment{
-					CallbackID: callbackIDAttendanceButton,
-					Actions: []slack.AttachmentAction{
-						slack.AttachmentAction{
-							Name:  actionTypeUnrest,
-							Value: actionTypeUnrest,
-							Text:  "休憩を終了する",
-							Style: "default",
-							Type:  "button",
-						},
-					},
-				},
-			},
-		}, nil
-	}
 	if timeTable.IsAttending() {
 		return &slack.Msg{
 			Attachments: []slack.Attachment{
 				slack.Attachment{
 					CallbackID: callbackIDAttendanceButton,
 					Actions: []slack.AttachmentAction{
-						slack.AttachmentAction{
-							Name:  actionTypeRest,
-							Value: actionTypeRest,
-							Text:  "休憩を開始する",
-							Style: "default",
-							Type:  "button",
-						},
 						slack.AttachmentAction{
 							Name:  actionTypeLeave,
 							Value: actionTypeLeave,
