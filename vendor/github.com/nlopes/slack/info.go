@@ -1,9 +1,7 @@
 package slack
 
 import (
-	"bytes"
 	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -129,19 +127,6 @@ func (t JSONTime) Time() time.Time {
 	return time.Unix(int64(t), 0)
 }
 
-// UnmarshalJSON will unmarshal both string and int JSON values
-func (t *JSONTime) UnmarshalJSON(buf []byte) error {
-	s := bytes.Trim(buf, `"`)
-
-	v, err := strconv.Atoi(string(s))
-	if err != nil {
-		return err
-	}
-
-	*t = JSONTime(int64(v))
-	return nil
-}
-
 // Team contains details about a team
 type Team struct {
 	ID     string `json:"id"`
@@ -156,40 +141,70 @@ type Icons struct {
 	Image72 string `json:"image_72,omitempty"`
 }
 
-// Info contains various details about the authenticated user and team.
+// Info contains various details about Users, Channels, Bots and the authenticated user.
 // It is returned by StartRTM or included in the "ConnectedEvent" RTM event.
 type Info struct {
-	URL  string       `json:"url,omitempty"`
-	User *UserDetails `json:"self,omitempty"`
-	Team *Team        `json:"team,omitempty"`
+	URL      string       `json:"url,omitempty"`
+	User     *UserDetails `json:"self,omitempty"`
+	Team     *Team        `json:"team,omitempty"`
+	Users    []User       `json:"users,omitempty"`
+	Channels []Channel    `json:"channels,omitempty"`
+	Groups   []Group      `json:"groups,omitempty"`
+	Bots     []Bot        `json:"bots,omitempty"`
+	IMs      []IM         `json:"ims,omitempty"`
 }
 
 type infoResponseFull struct {
 	Info
-	SlackResponse
+	WebResponse
 }
 
-// GetBotByID is deprecated and returns nil
+// GetBotByID returns a bot given a bot id
 func (info Info) GetBotByID(botID string) *Bot {
+	for _, bot := range info.Bots {
+		if bot.ID == botID {
+			return &bot
+		}
+	}
 	return nil
 }
 
-// GetUserByID is deprecated and returns nil
+// GetUserByID returns a user given a user id
 func (info Info) GetUserByID(userID string) *User {
+	for _, user := range info.Users {
+		if user.ID == userID {
+			return &user
+		}
+	}
 	return nil
 }
 
-// GetChannelByID is deprecated and returns nil
+// GetChannelByID returns a channel given a channel id
 func (info Info) GetChannelByID(channelID string) *Channel {
+	for _, channel := range info.Channels {
+		if channel.ID == channelID {
+			return &channel
+		}
+	}
 	return nil
 }
 
-// GetGroupByID is deprecated and returns nil
+// GetGroupByID returns a group given a group id
 func (info Info) GetGroupByID(groupID string) *Group {
+	for _, group := range info.Groups {
+		if group.ID == groupID {
+			return &group
+		}
+	}
 	return nil
 }
 
-// GetIMByID is deprecated and returns nil
+// GetIMByID returns an IM given an IM id
 func (info Info) GetIMByID(imID string) *IM {
+	for _, im := range info.IMs {
+		if im.ID == imID {
+			return &im
+		}
+	}
 	return nil
 }

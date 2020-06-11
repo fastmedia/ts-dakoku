@@ -2,13 +2,14 @@ package slack
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"strconv"
 )
 
 // Group contains all the information for a group
 type Group struct {
-	GroupConversation
+	groupConversation
 	IsGroup bool `json:"is_group"`
 }
 
@@ -27,14 +28,16 @@ type groupResponseFull struct {
 	SlackResponse
 }
 
-func (api *Client) groupRequest(ctx context.Context, path string, values url.Values) (*groupResponseFull, error) {
+func groupRequest(ctx context.Context, client HTTPRequester, path string, values url.Values, debug bool) (*groupResponseFull, error) {
 	response := &groupResponseFull{}
-	err := api.postMethod(ctx, path, values, response)
+	err := postForm(ctx, client, SLACK_API+path, values, response, debug)
 	if err != nil {
 		return nil, err
 	}
-
-	return response, response.Err()
+	if !response.Ok {
+		return nil, errors.New(response.Error)
+	}
+	return response, nil
 }
 
 // ArchiveGroup archives a private group
@@ -49,7 +52,10 @@ func (api *Client) ArchiveGroupContext(ctx context.Context, group string) error 
 		"channel": {group},
 	}
 
-	_, err := api.groupRequest(ctx, "groups.archive", values)
+	_, err := groupRequest(ctx, api.httpclient, "groups.archive", values, api.debug)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -65,8 +71,11 @@ func (api *Client) UnarchiveGroupContext(ctx context.Context, group string) erro
 		"channel": {group},
 	}
 
-	_, err := api.groupRequest(ctx, "groups.unarchive", values)
-	return err
+	_, err := groupRequest(ctx, api.httpclient, "groups.unarchive", values, api.debug)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateGroup creates a private group
@@ -81,7 +90,7 @@ func (api *Client) CreateGroupContext(ctx context.Context, group string) (*Group
 		"name":  {group},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.create", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.create", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +115,30 @@ func (api *Client) CreateChildGroupContext(ctx context.Context, group string) (*
 		"channel": {group},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.createChild", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.createChild", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
 	return &response.Group, nil
+}
+
+// CloseGroup closes a private group
+func (api *Client) CloseGroup(group string) (bool, bool, error) {
+	return api.CloseGroupContext(context.Background(), group)
+}
+
+// CloseGroupContext closes a private group with a custom context
+func (api *Client) CloseGroupContext(ctx context.Context, group string) (bool, bool, error) {
+	values := url.Values{
+		"token":   {api.token},
+		"channel": {group},
+	}
+
+	response, err := imRequest(ctx, api.httpclient, "groups.close", values, api.debug)
+	if err != nil {
+		return false, false, err
+	}
+	return response.NoOp, response.AlreadyClosed, nil
 }
 
 // GetGroupHistory fetches all the history for a private group
@@ -148,7 +176,7 @@ func (api *Client) GetGroupHistoryContext(ctx context.Context, group string, par
 		}
 	}
 
-	response, err := api.groupRequest(ctx, "groups.history", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.history", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +196,7 @@ func (api *Client) InviteUserToGroupContext(ctx context.Context, group, user str
 		"user":    {user},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.invite", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.invite", values, api.debug)
 	if err != nil {
 		return nil, false, err
 	}
@@ -187,8 +215,11 @@ func (api *Client) LeaveGroupContext(ctx context.Context, group string) (err err
 		"channel": {group},
 	}
 
-	_, err = api.groupRequest(ctx, "groups.leave", values)
-	return err
+	if _, err = groupRequest(ctx, api.httpclient, "groups.leave", values, api.debug); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // KickUserFromGroup kicks a user from a group
@@ -204,8 +235,11 @@ func (api *Client) KickUserFromGroupContext(ctx context.Context, group, user str
 		"user":    {user},
 	}
 
-	_, err = api.groupRequest(ctx, "groups.kick", values)
-	return err
+	if _, err = groupRequest(ctx, api.httpclient, "groups.kick", values, api.debug); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetGroups retrieves all groups
@@ -222,7 +256,7 @@ func (api *Client) GetGroupsContext(ctx context.Context, excludeArchived bool) (
 		values.Add("exclude_archived", "1")
 	}
 
-	response, err := api.groupRequest(ctx, "groups.list", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.list", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
@@ -237,12 +271,11 @@ func (api *Client) GetGroupInfo(group string) (*Group, error) {
 // GetGroupInfoContext retrieves the given group with a custom context
 func (api *Client) GetGroupInfoContext(ctx context.Context, group string) (*Group, error) {
 	values := url.Values{
-		"token":          {api.token},
-		"channel":        {group},
-		"include_locale": {strconv.FormatBool(true)},
+		"token":   {api.token},
+		"channel": {group},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.info", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.info", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +300,11 @@ func (api *Client) SetGroupReadMarkContext(ctx context.Context, group, ts string
 		"ts":      {ts},
 	}
 
-	_, err = api.groupRequest(ctx, "groups.mark", values)
-	return err
+	if _, err = groupRequest(ctx, api.httpclient, "groups.mark", values, api.debug); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // OpenGroup opens a private group
@@ -283,7 +319,7 @@ func (api *Client) OpenGroupContext(ctx context.Context, group string) (bool, bo
 		"channel": {group},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.open", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.open", values, api.debug)
 	if err != nil {
 		return false, false, err
 	}
@@ -307,7 +343,7 @@ func (api *Client) RenameGroupContext(ctx context.Context, group, name string) (
 
 	// XXX: the created entry in this call returns a string instead of a number
 	// so I may have to do some workaround to solve it.
-	response, err := api.groupRequest(ctx, "groups.rename", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.rename", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +363,7 @@ func (api *Client) SetGroupPurposeContext(ctx context.Context, group, purpose st
 		"purpose": {purpose},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.setPurpose", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.setPurpose", values, api.debug)
 	if err != nil {
 		return "", err
 	}
@@ -347,7 +383,7 @@ func (api *Client) SetGroupTopicContext(ctx context.Context, group, topic string
 		"topic":   {topic},
 	}
 
-	response, err := api.groupRequest(ctx, "groups.setTopic", values)
+	response, err := groupRequest(ctx, api.httpclient, "groups.setTopic", values, api.debug)
 	if err != nil {
 		return "", err
 	}

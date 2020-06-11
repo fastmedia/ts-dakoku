@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-type netDialerFunc func(network, addr string) (net.Conn, error)
+type netDialerFunc func(netowrk, addr string) (net.Conn, error)
 
 func (fn netDialerFunc) Dial(network, addr string) (net.Conn, error) {
 	return fn(network, addr)
@@ -22,18 +22,18 @@ func (fn netDialerFunc) Dial(network, addr string) (net.Conn, error) {
 
 func init() {
 	proxy_RegisterDialerType("http", func(proxyURL *url.URL, forwardDialer proxy_Dialer) (proxy_Dialer, error) {
-		return &httpProxyDialer{proxyURL: proxyURL, forwardDial: forwardDialer.Dial}, nil
+		return &httpProxyDialer{proxyURL: proxyURL, fowardDial: forwardDialer.Dial}, nil
 	})
 }
 
 type httpProxyDialer struct {
-	proxyURL    *url.URL
-	forwardDial func(network, addr string) (net.Conn, error)
+	proxyURL   *url.URL
+	fowardDial func(network, addr string) (net.Conn, error)
 }
 
 func (hpd *httpProxyDialer) Dial(network string, addr string) (net.Conn, error) {
 	hostPort, _ := hostPortNoPort(hpd.proxyURL)
-	conn, err := hpd.forwardDial(network, hostPort)
+	conn, err := hpd.fowardDial(network, hostPort)
 	if err != nil {
 		return nil, err
 	}

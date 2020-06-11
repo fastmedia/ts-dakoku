@@ -2,6 +2,7 @@ package slack
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"strconv"
 )
@@ -47,21 +48,23 @@ func (api *Client) AddStarContext(ctx context.Context, channel string, item Item
 		"token":   {api.token},
 	}
 	if item.Timestamp != "" {
-		values.Set("timestamp", item.Timestamp)
+		values.Set("timestamp", string(item.Timestamp))
 	}
 	if item.File != "" {
-		values.Set("file", item.File)
+		values.Set("file", string(item.File))
 	}
 	if item.Comment != "" {
-		values.Set("file_comment", item.Comment)
+		values.Set("file_comment", string(item.Comment))
 	}
 
 	response := &SlackResponse{}
-	if err := api.postMethod(ctx, "stars.add", values, response); err != nil {
+	if err := post(ctx, api.httpclient, "stars.add", values, response, api.debug); err != nil {
 		return err
 	}
-
-	return response.Err()
+	if !response.Ok {
+		return errors.New(response.Error)
+	}
+	return nil
 }
 
 // RemoveStar removes a starred item from a channel
@@ -76,21 +79,23 @@ func (api *Client) RemoveStarContext(ctx context.Context, channel string, item I
 		"token":   {api.token},
 	}
 	if item.Timestamp != "" {
-		values.Set("timestamp", item.Timestamp)
+		values.Set("timestamp", string(item.Timestamp))
 	}
 	if item.File != "" {
-		values.Set("file", item.File)
+		values.Set("file", string(item.File))
 	}
 	if item.Comment != "" {
-		values.Set("file_comment", item.Comment)
+		values.Set("file_comment", string(item.Comment))
 	}
 
 	response := &SlackResponse{}
-	if err := api.postMethod(ctx, "stars.remove", values, response); err != nil {
+	if err := post(ctx, api.httpclient, "stars.remove", values, response, api.debug); err != nil {
 		return err
 	}
-
-	return response.Err()
+	if !response.Ok {
+		return errors.New(response.Error)
+	}
+	return nil
 }
 
 // ListStars returns information about the stars a user added
@@ -114,15 +119,13 @@ func (api *Client) ListStarsContext(ctx context.Context, params StarsParameters)
 	}
 
 	response := &listResponseFull{}
-	err := api.postMethod(ctx, "stars.list", values, response)
+	err := post(ctx, api.httpclient, "stars.list", values, response, api.debug)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	if err := response.Err(); err != nil {
-		return nil, nil, err
+	if !response.Ok {
+		return nil, nil, errors.New(response.Error)
 	}
-
 	return response.Items, &response.Paging, nil
 }
 
