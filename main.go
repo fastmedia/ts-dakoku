@@ -1,6 +1,6 @@
 package main
 
-import "github.com/ngs/ts-dakoku/app"
+import "github.com/fastmedia/ts-dakoku/app"
 
 func main() {
 	if _, err := app.Run(); err != nil {

@@ -7,19 +7,12 @@ This library supports most if not all of the `api.slack.com` REST
 calls, as well as the Real-Time Messaging protocol over websocket, in
 a fully managed way.
 
-## Change log
 
-### v0.1.0 - May 28, 2017
 
-This is released before adding context support.
-As the used context package is the one from Go 1.7 this will be the last
-compatible with Go < 1.7.
 
-Please check [0.1.0](https://github.com/nlopes/slack/releases/tag/v0.1.0)
+## Changelog
 
-### CHANGELOG.md
-
-As of this version a [CHANGELOG.md](https://github.com/nlopes/slack/blob/master/CHANGELOG.md) is available. Please visit it for updates.
+[CHANGELOG.md](https://github.com/nlopes/slack/blob/master/CHANGELOG.md) is available. Please visit it for updates.
 
 ## Installing
 
@@ -42,7 +35,7 @@ func main() {
 	api := slack.New("YOUR_TOKEN_HERE")
 	// If you set debugging, it will log all requests to the console
 	// Useful when encountering issues
-	// api.SetDebug(true)
+	// slack.New("YOUR_TOKEN_HERE", slack.OptionDebug(true))
 	groups, err := api.GetGroups(false)
 	if err != nil {
 		fmt.Printf("%s\n", err)
@@ -77,6 +70,11 @@ func main() {
 ## Minimal RTM usage:
 
 See https://github.com/nlopes/slack/blob/master/examples/websocket/websocket.go
+
+
+## Minimal EventsAPI usage:
+
+See https://github.com/nlopes/slack/blob/master/examples/eventsapi/events.go
 
 
 ## Contributing
