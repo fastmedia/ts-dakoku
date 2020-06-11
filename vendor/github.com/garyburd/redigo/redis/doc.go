@@ -75,7 +75,7 @@
 // the server. The following example shows a simple pipeline.
 //
 //  c.Send("SET", "foo", "bar")
-//  c.Send("GET", "foo")
+//  c.Send(http.MethodGet, "foo")
 //  c.Flush()
 //  c.Receive() // reply from SET
 //  v, err = c.Receive() // reply from GET
@@ -174,4 +174,4 @@
 // non-recoverable error such as a network error or protocol parsing error. If
 // Err() returns a non-nil value, then the connection is not usable and should
 // be closed.
-package redis // import "github.com/garyburd/redigo/redis"
+package redis

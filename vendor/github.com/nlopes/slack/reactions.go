@@ -2,6 +2,7 @@ package slack
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"strconv"
 )
@@ -141,24 +142,26 @@ func (api *Client) AddReactionContext(ctx context.Context, name string, item Ite
 		values.Set("name", name)
 	}
 	if item.Channel != "" {
-		values.Set("channel", item.Channel)
+		values.Set("channel", string(item.Channel))
 	}
 	if item.Timestamp != "" {
-		values.Set("timestamp", item.Timestamp)
+		values.Set("timestamp", string(item.Timestamp))
 	}
 	if item.File != "" {
-		values.Set("file", item.File)
+		values.Set("file", string(item.File))
 	}
 	if item.Comment != "" {
-		values.Set("file_comment", item.Comment)
+		values.Set("file_comment", string(item.Comment))
 	}
 
 	response := &SlackResponse{}
-	if err := api.postMethod(ctx, "reactions.add", values, response); err != nil {
+	if err := post(ctx, api.httpclient, "reactions.add", values, response, api.debug); err != nil {
 		return err
 	}
-
-	return response.Err()
+	if !response.Ok {
+		return errors.New(response.Error)
+	}
+	return nil
 }
 
 // RemoveReaction removes a reaction emoji from a message, file or file comment.
@@ -175,24 +178,26 @@ func (api *Client) RemoveReactionContext(ctx context.Context, name string, item 
 		values.Set("name", name)
 	}
 	if item.Channel != "" {
-		values.Set("channel", item.Channel)
+		values.Set("channel", string(item.Channel))
 	}
 	if item.Timestamp != "" {
-		values.Set("timestamp", item.Timestamp)
+		values.Set("timestamp", string(item.Timestamp))
 	}
 	if item.File != "" {
-		values.Set("file", item.File)
+		values.Set("file", string(item.File))
 	}
 	if item.Comment != "" {
-		values.Set("file_comment", item.Comment)
+		values.Set("file_comment", string(item.Comment))
 	}
 
 	response := &SlackResponse{}
-	if err := api.postMethod(ctx, "reactions.remove", values, response); err != nil {
+	if err := post(ctx, api.httpclient, "reactions.remove", values, response, api.debug); err != nil {
 		return err
 	}
-
-	return response.Err()
+	if !response.Ok {
+		return errors.New(response.Error)
+	}
+	return nil
 }
 
 // GetReactions returns details about the reactions on an item.
@@ -206,30 +211,28 @@ func (api *Client) GetReactionsContext(ctx context.Context, item ItemRef, params
 		"token": {api.token},
 	}
 	if item.Channel != "" {
-		values.Set("channel", item.Channel)
+		values.Set("channel", string(item.Channel))
 	}
 	if item.Timestamp != "" {
-		values.Set("timestamp", item.Timestamp)
+		values.Set("timestamp", string(item.Timestamp))
 	}
 	if item.File != "" {
-		values.Set("file", item.File)
+		values.Set("file", string(item.File))
 	}
 	if item.Comment != "" {
-		values.Set("file_comment", item.Comment)
+		values.Set("file_comment", string(item.Comment))
 	}
 	if params.Full != DEFAULT_REACTIONS_FULL {
 		values.Set("full", strconv.FormatBool(params.Full))
 	}
 
 	response := &getReactionsResponseFull{}
-	if err := api.postMethod(ctx, "reactions.get", values, response); err != nil {
+	if err := post(ctx, api.httpclient, "reactions.get", values, response, api.debug); err != nil {
 		return nil, err
 	}
-
-	if err := response.Err(); err != nil {
-		return nil, err
+	if !response.Ok {
+		return nil, errors.New(response.Error)
 	}
-
 	return response.extractReactions(), nil
 }
 
@@ -257,14 +260,12 @@ func (api *Client) ListReactionsContext(ctx context.Context, params ListReaction
 	}
 
 	response := &listReactionsResponseFull{}
-	err := api.postMethod(ctx, "reactions.list", values, response)
+	err := post(ctx, api.httpclient, "reactions.list", values, response, api.debug)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	if err := response.Err(); err != nil {
-		return nil, nil, err
+	if !response.Ok {
+		return nil, nil, errors.New(response.Error)
 	}
-
 	return response.extractReactedItems(), &response.Paging, nil
 }

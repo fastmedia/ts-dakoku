@@ -10,7 +10,6 @@ var MatchersHeader = []MatchFunc{
 	MatchPath,
 	MatchHeaders,
 	MatchQueryParams,
-	MatchPathParams,
 }
 
 // MatchersBody exposes an slice of HTTP body specific built-in mock matchers.
@@ -54,23 +53,15 @@ type MockMatcher struct {
 // NewMatcher creates a new mock matcher
 // using the default matcher functions.
 func NewMatcher() *MockMatcher {
-	m := NewEmptyMatcher()
-	for _, matchFn := range Matchers {
-		m.Add(matchFn)
-	}
-	return m
+	return &MockMatcher{Matchers: Matchers}
 }
 
 // NewBasicMatcher creates a new matcher with header only mock matchers.
 func NewBasicMatcher() *MockMatcher {
-	m := NewEmptyMatcher()
-	for _, matchFn := range MatchersHeader {
-		m.Add(matchFn)
-	}
-	return m
+	return &MockMatcher{Matchers: MatchersHeader}
 }
 
-// NewEmptyMatcher creates a new empty matcher without default matchers.
+// NewEmptyMatcher creates a new empty matcher with out default amtchers.
 func NewEmptyMatcher() *MockMatcher {
 	return &MockMatcher{Matchers: []MatchFunc{}}
 }
@@ -93,15 +84,6 @@ func (m *MockMatcher) Set(stack []MatchFunc) {
 // Flush flushes the current matcher
 func (m *MockMatcher) Flush() {
 	m.Matchers = []MatchFunc{}
-}
-
-// Clone returns a separate MockMatcher instance that has a copy of the same MatcherFuncs
-func (m *MockMatcher) Clone() *MockMatcher {
-	m2 := NewEmptyMatcher()
-	for _, mFn := range m.Get() {
-		m2.Add(mFn)
-	}
-	return m2
 }
 
 // Match matches the given http.Request with a mock request
