@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="138d590c-ae7d-4b3e-b29b-bdb09799891a" name="Default Changelist" comment="" />
+    <list default="true" id="138d590c-ae7d-4b3e-b29b-bdb09799891a" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.circleci/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.circleci/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Godeps/Godeps.json" beforeDir="false" afterPath="$PROJECT_DIR$/Godeps/Godeps.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/bindata.go" beforeDir="false" afterPath="$PROJECT_DIR$/app/bindata.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -27,5 +32,15 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="-1252" y="848" width="584" height="486" key="find.popup" timestamp="1591933104122">
+      <screen x="-3840" y="23" width="3840" height="2137" />
+    </state>
+    <state x="-1252" y="848" width="584" height="486" key="find.popup/-3840.23.3840.2137/0.23.2048.1257@-3840.23.3840.2137" timestamp="1591933104122" />
+    <state x="-1295" y="528" key="search.everywhere.popup" timestamp="1591932956887">
+      <screen x="-3840" y="23" width="3840" height="2137" />
+    </state>
+    <state x="-1295" y="528" key="search.everywhere.popup/-3840.23.3840.2137/0.23.2048.1257@-3840.23.3840.2137" timestamp="1591932956887" />
   </component>
 </project>
