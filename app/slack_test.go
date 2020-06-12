@@ -147,8 +147,6 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 func TestGetActionCallback(t *testing.T) {
 	testGetActionCallbackWithActionType(t, actionTypeAttend, "出勤しました :office:")
 	testGetActionCallbackWithActionType(t, actionTypeLeave, "退勤しました :house:")
-	testGetActionCallbackWithActionType(t, actionTypeRest, "休憩を開始しました :coffee:")
-	testGetActionCallbackWithActionType(t, actionTypeUnrest, "休憩を終了しました :computer:")
 }
 
 func setupTimeTableGocks(items []timeTableItem, isHoliday *bool) {
@@ -231,44 +229,6 @@ func TestGetSlackMessage(t *testing.T) {
 	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
 	msg, err = ctx.getSlackMessage(slack.SlashCommand{TeamID: "T12345678"})
-	for _, test := range []Test{
-		{true, err == nil},
-		{"休憩を終了する", msg.Attachments[0].Actions[0].Text},
-		{actionTypeUnrest, msg.Attachments[0].Actions[0].Name},
-		{true, gock.IsDone()},
-	} {
-		test.Compare(t)
-	}
-	setupTimeTableGocks([]timeTableItem{
-		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
-		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
-	}, &[]bool{false}[0])
-	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage(slack.SlashCommand{TeamID: "T12345678"})
-	for _, test := range []Test{
-		{true, err == nil},
-		{"休憩を終了する", msg.Attachments[0].Actions[0].Text},
-		{actionTypeUnrest, msg.Attachments[0].Actions[0].Name},
-		{true, gock.IsDone()},
-	} {
-		test.Compare(t)
-	}
-	setupTimeTableGocks([]timeTableItem{
-		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
-		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
-	}, &[]bool{false}[0])
-	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage(slack.SlashCommand{TeamID: "T12345678"})
-	for _, test := range []Test{
-		{true, err == nil},
-		{"休憩を開始する", msg.Attachments[0].Actions[0].Text},
-		{actionTypeRest, msg.Attachments[0].Actions[0].Name},
-		{"退勤する", msg.Attachments[0].Actions[1].Text},
-		{actionTypeLeave, msg.Attachments[0].Actions[1].Name},
-		{true, gock.IsDone()},
-	} {
-		test.Compare(t)
-	}
 	setupTimeTableGocks([]timeTableItem{
 		{null.IntFromPtr(nil), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
