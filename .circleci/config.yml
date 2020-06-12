@@ -1,42 +1,26 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
-
 jobs:
-  test:
+  build:
     docker:
+      # specify the version
       - image: circleci/golang:1.12
-      - image: redis:3.0.7-alpine
-    working_directory: /go/src/github.com/fastmedia/ts-dakoku
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    #### TEMPLATE_NOTE: go expects specific checkout path representing url
+    #### expecting it in the form of
+    ####   /go/src/github.com/circleci/go-tool
+    ####   /go/src/bitbucket.org/circleci/go-tool
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
-      - run: make test
-      - run: go get github.com/mattn/goveralls
-      - run: go get github.com/schrej/godacov
-      - run: goveralls -coverprofile=coverage/cover.out -service=circle-ci
-      - run: godacov -t $CODACY_PROJECT_TOKEN -r ./coverage/cover.out -c $CIRCLE_SHA1
-      - store_artifacts:
-          path: coverage
-          destination: coverage
 
-  deploy:
-    docker:
-      - image: atsnngs/alpine-heroku-cli:latest
-    working_directory: /go/src/github.com/fastmedia/ts-dakoku
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - '4d:74:c3:f5:28:7d:ed:db:aa:b8:6c:7d:15:98:8a:5b'
-      - run: /bin/sh /setup.sh
-      - run: git push heroku master
-
-workflows:
-  version: 2
-  test:
-    jobs:
-      - test
-      - deploy:
-          filters:
-            branches:
-              only: [master, deploy]
-          requires:
-            - test
+      # specify any bash command here prefixed with `run: `
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
